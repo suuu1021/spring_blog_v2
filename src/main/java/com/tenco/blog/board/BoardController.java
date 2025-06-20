@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -17,6 +18,19 @@ public class BoardController {
     // 생성자 의존 주의 DI 처리
     private final BoardPersistRepository br;
 
+    // 게시글 상세 보기
+    // 주소설계 GET : http://localhost:8080/board/id
+    @GetMapping("/board/{id}")
+    public String detail(@PathVariable(name = "id") Long id, HttpServletRequest request) {
+        Board board = br.findById(id);
+        request.setAttribute("board", board);
+
+        // 1차 캐시 효과 - DB에 접근하지 않고 바로 영속성 컨텍스트에서 꺼낸다.
+        // br.findById(id);
+        return "board/detail";
+    }
+
+
     // 게시글 목록 화면 요청 처리
     // 1. index.mustache 파일을 반환 시키는 기능을 만든다.
     // 주소설계 : http://localhost:8080/ , http://localhost:8080/index
@@ -24,15 +38,11 @@ public class BoardController {
     @GetMapping({"/", "/index"})
     // public String boardList(HttpServletRequest request) {
     public String boardList(Model model) {
-
         List<Board> boardList = br.findAll();
-
         // request.setAttribute("boardList", boardList);
         model.addAttribute("boardList", boardList);
-
         return "index";
     }
-
 
     // 게시글 작성 화면 요청 처리
     @GetMapping("/board/save-form")
@@ -50,7 +60,6 @@ public class BoardController {
         // Board board = new Board(reqDTO.getTitle(), reqDTO.getContent(), reqDTO.getUsername());
         Board board = reqDTO.toEntity();
         br.save(board);
-
         // PRG 패턴 (Post-Redirect-Get)
         return "redirect:/";
     }
