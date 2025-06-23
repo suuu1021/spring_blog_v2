@@ -16,6 +16,25 @@ public class BoardPersistRepositoryTest {
     private BoardPersistRepository br;
 
     @Test
+    public void deleteById_test() {
+        // given
+        Long id = 1L;
+        // when
+        // 삭제할 게시글이 실제로 존재하는지 확인
+        Board targetBoard = br.findById(id);
+        Assertions.assertThat(targetBoard).isNotNull();
+
+        // 영속성 컨텍스트에서 삭제 실행
+        br.deleteById(id);
+
+        //then
+        // 삭제 후의 개수가 일치하는지 확인
+        List<Board> afterDeleteBoardList = br.findAll();
+        Assertions.assertThat(afterDeleteBoardList.size()).isEqualTo(3);
+    }
+
+
+    @Test
     public void findAll_test() {
         // given
         // db/data.sql(4개의 더미 데이터)
@@ -30,7 +49,7 @@ public class BoardPersistRepositoryTest {
         // 네이티브 쿼리를 사용한다는 것은 영속성 컨텍스트를 우회해서 일 처리
         // JPQL 바로 영속성 컨텍스트를 우회하지만 조회된 이후에는 영속성 상태가 된다.
 
-        for (Board board: boardList) {
+        for (Board board : boardList) {
             Assertions.assertThat(board.getId()).isNotNull();
         }
 

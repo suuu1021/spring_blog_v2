@@ -17,6 +17,41 @@ public class BoardPersistRepository {
     // @Autowired - final 사용 시 사용 불가
     private final EntityManager em; // 성능 향상
 
+    // 게시글 삭제하기 (영속성 컨텍스트 활용)
+    @Transactional
+    public void deleteById(Long id) {
+        // 1. 먼저 삭제할 엔티티를 영속 상태로 조회
+        Board board = em.find(Board.class, id);
+
+        // 영속 상태의 엔티티를 삭제 상태로 변경
+        em.remove(board);
+        // 트랜잭션이 커밋 되는 순간 삭제 처리
+
+        // 삭제 과정
+        // 1. Board 엔티티가 영속 상태에서 remove() 호출 시 삭제 상태로 변경
+        // 2. 1차 캐시에서 해당 엔티티를 제거
+        // 3. 트랜잭션 커밋 시점에 DELETE SQL 자동 실행
+        // 4. 연관관계 처리 자동 수행 (cascade 설정 시)
+    }
+
+    // 게시글 수정하기 (DB 접근 계층)
+    @Transactional
+    public void update(Long boardId, BoardRequest.UpdateDTO updateDTO) {
+
+        Board board = findById(boardId);
+        // board -> 영속성 컨텍스트 1차 캐시에 key=value 값이 저장되어 있다.
+        board.setTitle(updateDTO.getTitle());
+        board.setContent(updateDTO.getContent());
+        board.setUsername(updateDTO.getUsername());
+
+        // 트랜잭션이 끝나면 영속성 컨텍스트에서 변경 감지를 한다.
+        // 변경 감지 (Dirty Checking)
+        // 1. 영속성 컨텍스트가 엔티티 최초 상태를 스냅샷으로 보관
+        // 2. 필드 값 변경 시 현재 상태와 스냅샷 비교
+        // 3. 트랜잭션 커밋 시점에 변경된 필드만 UPDATE 쿼리를 자동 생성
+        // 4. Update board_tb SET title=?, content=?, username=? WHERE id=?
+    }
+
     // 게시글 한건 조회 쿼리 만들기
     // em.find(), JPQL, 네이티브 쿼리
     public Board findById(Long id) {
